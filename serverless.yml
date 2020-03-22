@@ -1,0 +1,784 @@
+service: icbaazzar-aws-rest
+
+custom:
+  config: ${file(./config/config.json)}
+  resultTtlInSeconds: 0
+  serverless-offline:
+    host: 0.0.0.0
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: ${opt:stage}
+  region: ${opt:region}
+
+plugins:
+  - serverless-offline
+  - serverless-plugin-split-stacks
+
+functions:
+
+  authorizer:
+    handler: helpers/utils/authorizer.handler
+    environment:
+      STAGE: ${opt:stage}
+
+  admin-authorizer:
+    handler: helpers/utils/admin-authorizer.handler
+    environment:
+      STAGE: ${opt:stage}
+
+# users
+
+  user-check-email:
+    handler: api/user/check-email.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/check-email
+        method: post
+
+  user-login:
+    handler: api/user/login.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/login
+        method: post
+
+  user-logout:
+    handler: api/user/logout.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/logout
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  user-create-register:
+    handler: api/user/create-register.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/create-register
+        method: post
+
+  user-reset-password:
+    handler: api/user/reset.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/reset
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  user-profile:
+    handler: api/user/profile.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/profile
+        method: get
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  user-profile-update:
+    handler: api/user/update.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/profile
+        method: put
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  user-subscription-renew:
+    handler: api/user/renew.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/renew
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  user-subscription-renew-expired:
+    handler: api/user/renew-expired.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/{id}/renew
+        method: post
+        request:
+          parameters:
+            paths:
+              id: true
+
+  user-supplier:
+    handler: api/user/get-user.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: supplier/{id}
+        method: get
+        request:
+          parameters:
+            paths:
+              id: true
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  user-upload-profile-image:
+    handler: api/user/upload-profile-image.handler
+    role: ICBazaarS3AccessRole
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/upload-profile-image
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+# forgot password
+
+  user-forgot-password:
+    handler: api/user/forgot.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/forgot
+        method: post
+
+  user-forgot-password-temp-credentials:
+    handler: api/user/forgot-temp-credentials.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/forgot
+        method: get
+
+# change password
+  user-change-password:
+    handler: api/user/change-pwd.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: user/change-pwd
+        method: patch
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+# subscriptions
+
+  subscription-list:
+    handler: api/subscription/list.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: subscriptions
+        method: get
+
+# payment
+
+  payment-create:
+    handler: api/payment/create.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: payment
+        method: post
+
+# inventory
+
+  inventory-create:
+    handler: api/inventory/create.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: inventory
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  inventory-list:
+    handler: api/inventory/list.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: inventory
+        method: get
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  inventory-get:
+    handler: api/inventory/inventory.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: inventory/{id}
+        method: get
+        request:
+          parameters:
+            paths:
+              id: true
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  inventory-hot-offers:
+    handler: api/inventory/hot-offers.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: hot-offers
+        method: get
+
+  inventory-oem-excess:
+    handler: api/inventory/oem-excess.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: oem-excess
+        method: get
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  inventory-upload:
+    handler: api/inventory/upload.handler
+    timeout: 30 # optional, in seconds, default is 6
+    iamRoleStatements:
+      - Effect: 'Allow'
+        Action:
+          - "s3:PutObject"
+          - "s3:GetObjectAcl"
+          - "s3:GetObject"
+          - "s3:ListBucket"
+          - "s3:HeadBucket"
+        Resource: "arn:aws:s3:::*"
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: inventory/upload
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+# search
+
+  search:
+    handler: api/search/get.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: search
+        method: get
+
+  search-popular:
+    handler: api/search/popular.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: popular-searches
+        method: get
+
+  autocomplete:
+    handler: api/search/autocomplete.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: /search/autocomplete
+        method: get
+
+# wishlist
+
+  wishlist-create:
+    handler: api/wishlist/create.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: wishlist
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  wishlist-list:
+    handler: api/wishlist/list.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: wishlist
+        method: get
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  wishlist-delete:
+    handler: api/wishlist/delete.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: wishlist/{id}
+        method: delete
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  wishlist-quote:
+    handler: api/wishlist/quote.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: wishlist/quote
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  wishlist-all:
+    handler: api/wishlist/all.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: wishlist/all
+        method: get
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+# quotes
+
+  quote-create:
+    handler: api/quote/create.handler
+    timeout: 30 # optional, in seconds, default is 6
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: quote
+        method: post
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  quote-list:
+    handler: api/quote/list.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: quote
+        method: get
+        authorizer:
+          name: authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+# admin
+
+  admin-create:
+    handler: api/admin/create.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/create
+        method: post
+
+  admin-login:
+    handler: api/admin/login.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/login
+        method: post
+
+  admin-logout:
+    handler: api/admin/logout.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/logout
+        method: post
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-create-subscription:
+    handler: api/admin/create-subscription.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/subscription
+        method: post
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-create-payment:
+    handler: api/admin/create-payment.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/payment
+        method: post
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-get-users:
+    handler: api/admin/list-users.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/users
+        method: get
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-get-user:
+    handler: api/admin/list-user.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/users/{id}
+        method: get
+        request:
+          parameters:
+            paths:
+              id: true
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-get-payments:
+    handler: api/admin/list-payments.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/user/payments/{user_id}
+        method: get
+        request:
+          parameters:
+            paths:
+              user_id: true
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-activate-user:
+    handler: api/admin/activate-user.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/users/{id}
+        method: patch
+        request:
+          parameters:
+            paths:
+              id: true
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-deactivate-user:
+    handler: api/admin/deactivate-user.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/users/{id}
+        method: put
+        request:
+          parameters:
+            paths:
+              id: true
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-delete-user:
+    handler: api/admin/delete-user.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/users/{id}
+        method: delete
+        request:
+          parameters:
+            paths:
+              id: true
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  admin-summary:
+    handler: api/admin/summary.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - http:
+        cors: true
+        path: admin/summary
+        method: get
+        authorizer:
+          name: admin-authorizer
+          resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  # admin-get-inventories:
+  #   handler: api/admin/list-inventories.handler
+  #   environment:
+  #     STAGE: ${opt:stage}
+  #   events:
+  #    - http:
+  #       cors: true
+  #       path: admin/inventories
+  #       method: get
+  #       authorizer:
+  #         name: admin-authorizer
+  #         resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  # admin-delete-inventory:
+  #   handler: api/admin/delete-inventory.handler
+  #   environment:
+  #     STAGE: ${opt:stage}
+  #   events:
+  #    - http:
+  #       cors: true
+  #       path: admin/inventories/{id}
+  #       method: delete
+  #       request:
+  #         parameters:
+  #           paths:
+  #             id: true
+  #       authorizer:
+  #         name: admin-authorizer
+  #         resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  # admin-get-quotes:
+  #   handler: api/admin/list-quotes.handler
+  #   environment:
+  #     STAGE: ${opt:stage}
+  #   events:
+  #    - http:
+  #       cors: true
+  #       path: admin/quotes
+  #       method: get
+  #       authorizer:
+  #         name: admin-authorizer
+  #         resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+  # admin-get-wishlists:
+  #   handler: api/admin/list-wishlists.handler
+  #   environment:
+  #     STAGE: ${opt:stage}
+  #   events:
+  #    - http:
+  #       cors: true
+  #       path: admin/wishlists
+  #       method: get
+  #       authorizer:
+  #         name: admin-authorizer
+  #         resultTtlInSeconds: ${self:custom.resultTtlInSeconds}
+
+# cron jobs
+  inventory-delete-on-schedule:
+    handler: api/inventory/delete-on-schedule.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - schedule: cron(35 8 * * ? *)
+
+  inventory-delete-warning-on-schedule:
+    handler: api/inventory/delete-warning-on-schedule.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+     - schedule: cron(30 8 * * ? *)
+
+  match-wishlist-and-inventory:
+    handler: api/inventory/match-wishlist-and-inventory.handler
+    environment:
+      STAGE: ${opt:stage}
+    events:
+      - schedule: cron(40 8 * * ? *)
+
+  oem-excess-notification:
+    handler: api/inventory/oem-excess-notification.handler
+    timeout: 30 # optional, in seconds, default is 6
+    environment:
+      STAGE: ${opt:stage}
+    events:
+      - schedule: cron(30 9 * * ? *)
+
+  handle-bounces:
+    handler: helpers/utils/bounces.handler
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - EmailBouncesQueue
+              - Arn
+resources:
+  Resources:
+
+    EmailBouncesQueue:
+      Type: "AWS::SQS::Queue"
+      Properties:
+        QueueName: "EmailBouncesQueue"
+
+    EmailBouncesTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: "Bounces topic"
+        TopicName: "EmailBouncesTopic"
+
+    BouncesQueueSubscription:
+      Type: AWS::SNS::Subscription
+      Properties:
+        TopicArn:
+          Ref: EmailBouncesTopic
+        Endpoint:
+          Fn::GetAtt:
+            - EmailBouncesQueue
+            - Arn
+        Protocol: sqs
+        RawMessageDelivery: 'true'
+
+
+    ICBazaarS3AccessRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /icbaazzar/
+        RoleName: ICBazaarS3AccessRole
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: BazarS3AccessProfileImagePolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource:
+                    - 'Fn::Join':
+                      - ':'
+                      -
+                        - 'arn:aws:logs'
+                        - Ref: 'AWS::Region'
+                        - Ref: 'AWS::AccountId'
+                        - 'log-group:/aws/lambda/*:*:*'
+                -  Effect: "Allow"
+                   Action:
+                     - "s3:PutObject"
+                     - "s3:GetObjectAcl"
+                     - "s3:GetObject"
+                     - "s3:ListBucket"
+                     - "s3:HeadBucket"
+                     - "s3:PutObjectAcl"
+                   Resource: "*"
