@@ -1,4 +1,4 @@
-### Instructions
+### Instructions to build docker image
 
 # AWS Setup
 
