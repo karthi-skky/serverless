@@ -1,6 +1,6 @@
 ### Instructions to build docker image
 
-# AWS Setup
+# AWS Setup for node
 
 1. docker build . -t serverless-node
 2. docker run --publish 3000:3000 serverless-node
